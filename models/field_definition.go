@@ -8,20 +8,20 @@ import (
 
 // constants for describing possible field types
 const (
-	KindString            Kind = 1
-	KindInteger           Kind = 2
-	KindFloat             Kind = 3
-	KindInstant           Kind = 4
-	KindDuration          Kind = 5
-	KindURL               Kind = 6
-	KindWorkitemReference Kind = 7
-	KindUser              Kind = 8
-	KindEnum              Kind = 9
-	KindList              Kind = 10
+	KindString            Kind = "string"
+	KindInteger           Kind = "integer"
+	KindFloat             Kind = "float"
+	KindInstant           Kind = "instant"
+	KindDuration          Kind = "duration"
+	KindURL               Kind = "url"
+	KindWorkitemReference Kind = "workitem"
+	KindUser              Kind = "user"
+	KindEnum              Kind = "enum"
+	KindList              Kind = "list"
 )
 
 // Kind is the kind of field type
-type Kind byte
+type Kind string
 
 /*
 FieldType describes the possible values of a FieldDefinition
@@ -36,6 +36,8 @@ type FieldType interface {
 		ConvertToModel converts a field value for storage in the db
 	*/
 	ConvertFromModel(value interface{}) (interface{}, error)
+
+	Validate(value interface{}) error
 }
 
 /*
@@ -50,10 +52,25 @@ type FieldDefinition struct {
  Convert a field value for storage as json. As the system matures, add more checks (for example whether a user is in the system, etc.)
 */
 func (field FieldDefinition) ConvertToModel(name string, value interface{}) (interface{}, error) {
-	if field.Required && value == nil {
-		return nil, fmt.Errorf("Value %s is required", name)
+
+	if err := field.Validate(name, value); err != nil {
+		return nil, err
 	}
-	return field.Type.ConvertToModel(value)
+
+	res, err := field.Type.ConvertToModel(value)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (field FieldDefinition) Validate(name string, value interface{}) error {
+	// Must be done here because Required is attribute of FieldDefinition
+	if field.Required && value == nil {
+		return fmt.Errorf("Value %s is required", name)
+	}
+	return field.Type.Validate(value)
 }
 
 /*
