@@ -1,9 +1,8 @@
-package account
+package models
 
 import (
 	"time"
 
-	"github.com/almighty/almighty-core/models"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
@@ -12,10 +11,12 @@ import (
 
 // User describes a User(single email) in any system
 type User struct {
-	models.Lifecycle
 	ID         uuid.UUID `sql:"type:uuid default uuid_generate_v4()" gorm:"primary_key"` // This is the ID PK field
-	Email      string    `sql:"unique_index"`                                            // This is the unique email field
-	IdentityID uuid.UUID `sql:"type:uuid"`                                               // Belongs To Identity
+	CreatedAt  time.Time
+	DeletedAt  *time.Time
+	Email      string    `sql:"unique_index"` // This is the unique email field
+	IdentityID uuid.UUID `sql:"type:uuid"`    // Belongs To Identity
+	UpdatedAt  time.Time
 	Identity   Identity
 }
 
@@ -28,12 +29,12 @@ func (m User) TableName() string {
 
 // GormUserRepository is the implementation of the storage interface for User.
 type GormUserRepository struct {
-	db *gorm.DB
+	ts *GormTransactionSupport
 }
 
 // NewUserRepository creates a new storage type.
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &GormUserRepository{db: db}
+func NewUserRepository(ts *GormTransactionSupport) UserRepository {
+	return &GormUserRepository{ts: ts}
 }
 
 // UserRepository represents the storage interface.
@@ -42,7 +43,7 @@ type UserRepository interface {
 	Create(ctx context.Context, u *User) error
 	Save(ctx context.Context, u *User) error
 	Delete(ctx context.Context, ID uuid.UUID) error
-	Query(funcs ...func(*gorm.DB) *gorm.DB) ([]*User, error)
+	List(funcs ...func(*gorm.DB) *gorm.DB) ([]*User, error)
 }
 
 // TableName overrides the table name settings in Gorm to force a specific table name
@@ -59,7 +60,7 @@ func (m *GormUserRepository) Load(ctx context.Context, id uuid.UUID) (*User, err
 	defer goa.MeasureSince([]string{"goa", "db", "user", "load"}, time.Now())
 
 	var native User
-	err := m.db.Table(m.TableName()).Where("id = ?", id).Find(&native).Error
+	err := m.ts.db.Table(m.TableName()).Where("id = ?", id).Find(&native).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
@@ -73,7 +74,7 @@ func (m *GormUserRepository) Create(ctx context.Context, u *User) error {
 
 	u.ID = uuid.NewV4()
 
-	err := m.db.Create(u).Error
+	err := m.ts.db.Create(u).Error
 	if err != nil {
 		goa.LogError(ctx, "error adding User", "error", err.Error())
 		return err
@@ -91,7 +92,7 @@ func (m *GormUserRepository) Save(ctx context.Context, model *User) error {
 		goa.LogError(ctx, "error updating User", "error", err.Error())
 		return err
 	}
-	err = m.db.Model(obj).Updates(model).Error
+	err = m.ts.db.Model(obj).Updates(model).Error
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func (m *GormUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 	var obj User
 
-	err := m.db.Delete(&obj, id).Error
+	err := m.ts.db.Delete(&obj, id).Error
 
 	if err != nil {
 		goa.LogError(ctx, "error deleting User", "error", err.Error())
@@ -114,12 +115,12 @@ func (m *GormUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// Query expose an open ended Query model
-func (m *GormUserRepository) Query(funcs ...func(*gorm.DB) *gorm.DB) ([]*User, error) {
+// List expose an open ended Query model
+func (m *GormUserRepository) List(funcs ...func(*gorm.DB) *gorm.DB) ([]*User, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "user", "query"}, time.Now())
 	var objs []*User
 
-	err := m.db.Scopes(funcs...).Table(m.TableName()).Find(&objs).Error
+	err := m.ts.db.Scopes(funcs...).Table(m.TableName()).Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func UserFilterByIdentity(identityID uuid.UUID, originaldb *gorm.DB) func(db *go
 	}
 }
 
-// UserByEmails is a gorm filter for emails.
+// UserByEmails is a gorm filter for a Belongs To relationship.
 func UserByEmails(emails []string) func(db *gorm.DB) *gorm.DB {
 	if len(emails) > 0 {
 		return func(db *gorm.DB) *gorm.DB {
