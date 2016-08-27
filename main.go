@@ -140,6 +140,8 @@ func main() {
 	tokenManager := token.NewManager(publicKey, privateKey)
 	app.UseJWTMiddleware(service, jwt.New(publicKey, nil, app.NewJWTSecurity()))
 
+	ts := models.NewGormTransactionSupport(db)
+
 	// Mount "login" controller
 	oauth := &oauth2.Config{
 		ClientID:     "875da0d2113ba0a6951d",
@@ -177,8 +179,8 @@ func main() {
 	app.MountTrackerqueryController(service, c6)
 
 	// Mount "user" controller
-	userCtrl := NewUserController(service, identityRepository, tokenManager)
-	app.MountUserController(service, userCtrl)
+	c5 := NewUserController(service, account.NewIdentityRepository(db))
+	app.MountUserController(service, c5)
 
 	fmt.Println("Git Commit SHA: ", Commit)
 	fmt.Println("UTC Build Time: ", BuildTime)

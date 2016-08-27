@@ -167,6 +167,26 @@ var _ = Resource("user", func() {
 
 })
 
+var _ = Resource("version", func() {
+
+	Action("show", func() {
+		Security("jwt")
+		Routing(
+			GET(""),
+		)
+		Description("Get the authenticated user")
+		Response(OK, func() {
+			Media(User)
+		})
+		Response(BadRequest, func() {
+			Media(ErrorMedia)
+		})
+		Response(InternalServerError)
+		Response(Unauthorized)
+	})
+
+})
+
 var _ = Resource("status", func() {
 
 	DefaultMedia(ALMStatus)

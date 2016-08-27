@@ -1,3 +1,5 @@
+// +build unit
+
 package main
 
 import (
@@ -8,67 +10,46 @@ import (
 
 	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app/test"
-	"github.com/almighty/almighty-core/resource"
-	almtoken "github.com/almighty/almighty-core/token"
 	token "github.com/dgrijalva/jwt-go"
-	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware/security/jwt"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
 
-func newUserController() *UserController {
-	return newUserControllerWithRepo(&TestIdentityRepository{})
-}
-
-func newUserControllerWithRepo(repo *TestIdentityRepository) *UserController {
-	pub, _ := almtoken.ParsePublicKey(almtoken.RSAPublicKey)
-	priv, _ := almtoken.ParsePrivateKey(almtoken.RSAPrivateKey)
-	return NewUserController(goa.New("alm-test"), repo, almtoken.NewManager(pub, priv))
-}
-
 func TestCurrentAuthorizedMissingUUID(t *testing.T) {
-	t.Parallel()
-	resource.Require(t, resource.UnitTest)
 	jwtToken := token.New(token.SigningMethodRS256)
 	ctx := jwt.WithJWT(context.Background(), jwtToken)
 
-	controller := newUserController()
-	test.ShowUserBadRequest(t, ctx, nil, controller)
+	controller := UserController{}
+	test.ShowUserBadRequest(t, ctx, nil, &controller)
 }
 
 func TestCurrentAuthorizedNonUUID(t *testing.T) {
-	t.Parallel()
-	resource.Require(t, resource.UnitTest)
 	jwtToken := token.New(token.SigningMethodRS256)
 	jwtToken.Claims.(token.MapClaims)["uuid"] = "aa"
 	ctx := jwt.WithJWT(context.Background(), jwtToken)
 
-	controller := newUserController()
-	test.ShowUserBadRequest(t, ctx, nil, controller)
+	controller := UserController{}
+	test.ShowUserBadRequest(t, ctx, nil, &controller)
 }
 
 func TestCurrentAuthorizedMissingIdentity(t *testing.T) {
-	t.Parallel()
-	resource.Require(t, resource.UnitTest)
 	jwtToken := token.New(token.SigningMethodRS256)
 	jwtToken.Claims.(token.MapClaims)["uuid"] = uuid.NewV4().String()
 	ctx := jwt.WithJWT(context.Background(), jwtToken)
 
-	controller := newUserController()
-	test.ShowUserUnauthorized(t, ctx, nil, controller)
+	controller := UserController{identityRepository: &TestIdentityRepository{}}
+	test.ShowUserUnauthorized(t, ctx, nil, &controller)
 }
 
 func TestCurrentAuthorizedOK(t *testing.T) {
-	t.Parallel()
-	resource.Require(t, resource.UnitTest)
 	jwtToken := token.New(token.SigningMethodRS256)
 	jwtToken.Claims.(token.MapClaims)["uuid"] = uuid.NewV4().String()
 	ctx := jwt.WithJWT(context.Background(), jwtToken)
 
 	ident := account.Identity{FullName: "Test user", ImageURL: "http://a.com"}
-	controller := newUserControllerWithRepo(&TestIdentityRepository{Identity: &ident})
-	_, user := test.ShowUserOK(t, ctx, nil, controller)
+	controller := UserController{identityRepository: &TestIdentityRepository{Identity: &ident}}
+	_, user := test.ShowUserOK(t, ctx, nil, &controller)
 
 	if *user.FullName != ident.FullName {
 		t.Errorf("Expected FullName %v to match %v", user.FullName, ident.FullName)
