@@ -19,7 +19,6 @@ import (
 
 	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
-	"github.com/almighty/almighty-core/configuration"
 	"github.com/almighty/almighty-core/login"
 	"github.com/almighty/almighty-core/migration"
 	"github.com/almighty/almighty-core/models"
@@ -141,6 +140,7 @@ func main() {
 	app.UseJWTMiddleware(service, jwt.New(publicKey, nil, app.NewJWTSecurity()))
 
 	ts := models.NewGormTransactionSupport(db)
+	identityRepository := account.NewIdentityRepository(db)
 
 	// Mount "login" controller
 	oauth := &oauth2.Config{
@@ -149,14 +149,13 @@ func main() {
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}
-
-	loginService := login.NewGitHubOAuth(oauth, identityRepository, userRepository, tokenManager)
-	loginCtrl := NewLoginController(service, loginService, tokenManager)
+	loginService := login.NewGitHubOAuth(oauth, identityRepository)
+	loginCtrl := NewLoginController(service)
 	app.MountLoginController(service, loginCtrl)
 
-	// Mount "status" controller
-	statusCtrl := NewStatusController(service, db)
-	app.MountStatusController(service, statusCtrl)
+	// Mount "version" controller
+	versionCtrl := NewVersionController(service)
+	app.MountVersionController(service, versionCtrl)
 
 	// Mount "workitem" controller
 	workitemCtrl := NewWorkitemController(service, wiRepo, ts)
@@ -179,7 +178,7 @@ func main() {
 	app.MountTrackerqueryController(service, c6)
 
 	// Mount "user" controller
-	c5 := NewUserController(service, account.NewIdentityRepository(db))
+	c5 := NewUserController(service, identityRepository)
 	app.MountUserController(service, c5)
 
 	fmt.Println("Git Commit SHA: ", Commit)
