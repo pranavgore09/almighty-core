@@ -1,5 +1,5 @@
-hash: 4bf435c1dd3e7f59b24c14855243ad900f786dfc0bb47a9b22855a6c24048c86
-updated: 2016-10-11T12:06:09.629041574+02:00
+hash: 1f24ea00810af4a4fc89e16acd6ddf324a5033ba2b7e89fe77c7f6bdf08f9e00
+updated: 2016-09-07T17:29:21.220520651+02:00
 imports:
 - name: bitbucket.org/pkg/inflect
   version: 8961c3750a47b8c0b3e118d52513b97adf85a7e8
@@ -18,7 +18,7 @@ imports:
 - name: github.com/dimfeld/httppath
   version: c8e499c3ef3c3e272ed8bdcc1ccf39f73c88debc
 - name: github.com/dimfeld/httptreemux
-  version: b44851a265a086f908e6e81a869842941adc2c0f
+  version: 2b442cd17d33755a60a283b7e133ea51a94994a4
 - name: github.com/elazarl/go-bindata-assetfs
   version: 57eb5e1fc594ad4b0b1dbea7b286d299e0cb43c2
   subpackages:
@@ -45,7 +45,7 @@ imports:
 - name: github.com/goadesign/gorma
   version: f7116846126a4cb17a0cddd6b3b429ad1592f260
 - name: github.com/golang/protobuf
-  version: df1d3ca07d2d07bba352d5b73c4313b4e2a6203e
+  version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
   subpackages:
   - proto
 - name: github.com/google/go-github
@@ -137,6 +137,7 @@ imports:
   subpackages:
   - assert
   - suite
+  - require
 - name: github.com/wadey/gocovmerge
   version: b5bfa59ec0adc420475f97f89b58045c721d761c
 - name: github.com/zach-klippenstein/goregen
@@ -154,25 +155,16 @@ imports:
   - context
   - websocket
 - name: golang.org/x/oauth2
-  version: 1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5
+  version: 4d549c893be7d4011bab739cc585d091a7188d27
   subpackages:
   - github
   - internal
-- name: golang.org/x/sys
-  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
-  subpackages:
-  - unix
-- name: golang.org/x/text
-  version: ceefd2213ed29504fff30155163c8f59827734f3
-  subpackages:
-  - transform
-  - unicode/norm
 - name: golang.org/x/tools
   version: 527b253f588776e5f72a0a0d1e93195cd3f82707
   subpackages:
   - go/ast/astutil
 - name: google.golang.org/appengine
-  version: 3f4dbbc0ec153a39878fd524ece9f39732bd4998
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
   subpackages:
   - urlfetch
   - internal

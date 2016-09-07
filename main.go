@@ -135,10 +135,6 @@ func main() {
 	tokenManager := token.NewManager(publicKey, privateKey)
 	app.UseJWTMiddleware(service, jwt.New(publicKey, nil, app.NewJWTSecurity()))
 
-	ts := models.NewGormTransactionSupport(db)
-	identityRepository := account.NewIdentityRepository(db)
-	userRepository := account.NewUserRepository(db)
-
 	// Mount "login" controller
 	oauth := &oauth2.Config{
 		ClientID:     "875da0d2113ba0a6951d",
@@ -146,9 +142,9 @@ func main() {
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}
-	tokenManager := token.NewManager(token.RSAPublicKey, token.RSAPublicKey)
+	tokenManager := token.NewManager(token.RSAPrivateKey, token.RSAPublicKey)
 	loginService := login.NewGitHubOAuth(oauth, identityRepository, userRepository, tokenManager)
-	loginCtrl := NewLoginController(service)
+	loginCtrl := NewLoginController(service, loginService)
 	app.MountLoginController(service, loginCtrl)
 
 	// Mount "version" controller
@@ -176,8 +172,8 @@ func main() {
 	app.MountTrackerqueryController(service, c6)
 
 	// Mount "user" controller
-	c5 := NewUserController(service, identityRepository)
-	app.MountUserController(service, c5)
+	userCtrl := NewUserController(service, identityRepository)
+	app.MountUserController(service, userCtrl)
 
 	fmt.Println("Git Commit SHA: ", Commit)
 	fmt.Println("UTC Build Time: ", BuildTime)
