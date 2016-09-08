@@ -58,7 +58,7 @@ func TestGetWorkItem(t *testing.T) {
 	wir := models.NewWorkItemTypeRepository(ts)
 	repo := models.NewWorkItemRepository(ts, wir)
 	controller := WorkitemController{ts: ts, wiRepository: repo}
-	payload := app.CreateWorkitemPayload{
+	payload := app.CreateWorkItemPayload{
 		Type: "system.bug",
 		Fields: map[string]interface{}{
 			"system.title":   "Test WI",
@@ -79,7 +79,7 @@ func TestGetWorkItem(t *testing.T) {
 	}
 
 	wi.Fields["system.creator"] = "thomas"
-	payload2 := app.UpdateWorkitemPayload{
+	payload2 := app.UpdateWorkItemPayload{
 		Type:    wi.Type,
 		Version: wi.Version,
 		Fields:  wi.Fields,
@@ -104,7 +104,7 @@ func TestCreateWI(t *testing.T) {
 	wir := models.NewWorkItemTypeRepository(ts)
 	repo := models.NewWorkItemRepository(ts, wir)
 	controller := WorkitemController{ts: ts, wiRepository: repo}
-	payload := app.CreateWorkitemPayload{
+	payload := app.CreateWorkItemPayload{
 		Type: "system.bug",
 		Fields: map[string]interface{}{
 			"system.title":   "Test WI",
@@ -125,7 +125,7 @@ func TestListByFields(t *testing.T) {
 	wir := models.NewWorkItemTypeRepository(ts)
 	repo := models.NewWorkItemRepository(ts, wir)
 	controller := WorkitemController{ts: ts, wiRepository: repo}
-	payload := app.CreateWorkitemPayload{
+	payload := app.CreateWorkItemPayload{
 		Type: "system.bug",
 		Fields: map[string]interface{}{
 			"system.title":   "run integration test",
