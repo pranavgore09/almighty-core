@@ -14,7 +14,7 @@ func TestCreateTracker(t *testing.T) {
 	ts := remoteworkitem.NewGormTransactionSupport(db)
 	repo := remoteworkitem.NewTrackerRepository(ts)
 	controller := TrackerController{ts: ts, tRepository: repo, scheduler: rwiScheduler}
-	payload := app.CreateTrackerPayload{
+	payload := app.CreateTrackerAlternatePayload{
 		URL:  "http://issues.jboss.com",
 		Type: "jira",
 	}
@@ -30,7 +30,7 @@ func TestGetTracker(t *testing.T) {
 	ts := remoteworkitem.NewGormTransactionSupport(db)
 	repo := remoteworkitem.NewTrackerRepository(ts)
 	controller := TrackerController{ts: ts, tRepository: repo, scheduler: rwiScheduler}
-	payload := app.CreateTrackerPayload{
+	payload := app.CreateTrackerAlternatePayload{
 		URL:  "http://issues.jboss.com",
 		Type: "jira",
 	}
@@ -45,7 +45,7 @@ func TestGetTracker(t *testing.T) {
 		t.Errorf("Id should be %s, but is %s", result.ID, tr.ID)
 	}
 
-	payload2 := app.UpdateTrackerPayload{
+	payload2 := app.UpdateTrackerAlternatePayload{
 		URL:  tr.URL,
 		Type: tr.Type,
 	}
@@ -70,7 +70,7 @@ func TestTrackerListItemsNotNil(t *testing.T) {
 	ts := remoteworkitem.NewGormTransactionSupport(db)
 	repo := remoteworkitem.NewTrackerRepository(ts)
 	controller := TrackerController{ts: ts, tRepository: repo, scheduler: rwiScheduler}
-	payload := app.CreateTrackerPayload{
+	payload := app.CreateTrackerAlternatePayload{
 		URL:  "http://issues.jboss.com",
 		Type: "jira",
 	}
@@ -96,7 +96,7 @@ func TestCreateTrackerValidId(t *testing.T) {
 	ts := remoteworkitem.NewGormTransactionSupport(db)
 	repo := remoteworkitem.NewTrackerRepository(ts)
 	controller := TrackerController{ts: ts, tRepository: repo, scheduler: rwiScheduler}
-	payload := app.CreateTrackerPayload{
+	payload := app.CreateTrackerAlternatePayload{
 		URL:  "http://issues.jboss.com",
 		Type: "jira",
 	}
