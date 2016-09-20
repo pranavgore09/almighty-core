@@ -1,6 +1,7 @@
 package token
 
 import (
+	"crypto/rsa"
 	"errors"
 
 	"github.com/almighty/almighty-core/account"
@@ -13,16 +14,19 @@ import (
 // Manager generate and find auth token information
 type Manager interface {
 	Generate(account.Identity) string
-	Locate(ctx context.Context) (*uuid.UUID, error)
+	Extract(string) (*account.Identity, error)
+	Locate(ctx context.Context) (uuid.UUID, error)
 }
 
 type tokenManager struct {
-	privateKey string
+	publicKey  *rsa.PublicKey
+	privateKey *rsa.PrivateKey
 }
 
 // NewManager returns a new token Manager for handling creation of tokens
-func NewManager(privateKey string) Manager {
+func NewManager(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) Manager {
 	return &tokenManager{
+		publicKey:  publicKey,
 		privateKey: privateKey,
 	}
 }
@@ -32,29 +36,62 @@ func (mgm tokenManager) Generate(ident account.Identity) string {
 	token.Claims.(jwt.MapClaims)["uuid"] = ident.ID.String()
 	token.Claims.(jwt.MapClaims)["fullName"] = ident.FullName
 	token.Claims.(jwt.MapClaims)["imageURL"] = ident.ImageURL
-	key, err := jwt.ParseRSAPrivateKeyFromPEM(([]byte(mgm.privateKey)))
-	if err != nil {
-		panic(err)
-	}
 
-	tokenStr, err := token.SignedString(key)
+	tokenStr, err := token.SignedString(mgm.privateKey)
 	if err != nil {
 		panic(err)
 	}
 	return tokenStr
 }
 
-func (mgm tokenManager) Locate(ctx context.Context) (*uuid.UUID, error) {
+func (mgm tokenManager) Extract(tokenString string) (*account.Identity, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return mgm.publicKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("Token not valid")
+	}
+
+	id, err := uuid.FromString(token.Claims.(jwt.MapClaims)["uuid"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	ident := account.Identity{
+		ID:       id,
+		FullName: token.Claims.(jwt.MapClaims)["fullName"].(string),
+		ImageURL: token.Claims.(jwt.MapClaims)["imageURL"].(string),
+	}
+
+	return &ident, nil
+}
+
+func (mgm tokenManager) Locate(ctx context.Context) (uuid.UUID, error) {
 	token := goajwt.ContextJWT(ctx)
+	if token == nil {
+		return uuid.UUID{}, errors.New("Missing token") // TODO, make specific tokenErrors
+	}
 	id := token.Claims.(jwt.MapClaims)["uuid"]
 	if id == nil {
-		return nil, errors.New("Missing uuid")
+		return uuid.UUID{}, errors.New("Missing uuid")
 	}
 	idTyped, err := uuid.FromString(id.(string))
 	if err != nil {
-		return nil, errors.New("uuid not of type string")
+		return uuid.UUID{}, errors.New("uuid not of type string")
 	}
-	return &idTyped, nil
+	return idTyped, nil
+}
+
+func ParsePublicKey(key string) (*rsa.PublicKey, error) {
+	return jwt.ParseRSAPublicKeyFromPEM([]byte(key))
+}
+
+func ParsePrivateKey(key string) (*rsa.PrivateKey, error) {
+	return jwt.ParseRSAPrivateKeyFromPEM([]byte(key))
 }
 
 // RSAPrivateKey for signing JWT Tokens

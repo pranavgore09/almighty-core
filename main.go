@@ -25,7 +25,6 @@ import (
 	"github.com/almighty/almighty-core/remoteworkitem"
 	"github.com/almighty/almighty-core/token"
 	"github.com/almighty/almighty-core/transaction"
-	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
 	"github.com/goadesign/goa/middleware/security/jwt"
@@ -127,7 +126,12 @@ func main() {
 	service.Use(middleware.ErrorHandler(service, true))
 	service.Use(middleware.Recover())
 
-	publicKey, err := jwtGo.ParseRSAPublicKeyFromPEM([]byte(token.RSAPublicKey))
+	publicKey, err := token.ParsePublicKey(token.RSAPublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey, err := token.ParsePrivateKey(token.RSAPrivateKey)
 	if err != nil {
 		panic(err)
 	}
@@ -142,7 +146,7 @@ func main() {
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}
-	tokenManager := token.NewManager(token.RSAPrivateKey)
+
 	loginService := login.NewGitHubOAuth(oauth, identityRepository, userRepository, tokenManager)
 	loginCtrl := NewLoginController(service, loginService, tokenManager)
 	app.MountLoginController(service, loginCtrl)
