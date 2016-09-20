@@ -27,7 +27,7 @@ func (c *UserController) Show(ctx *app.ShowUserContext) error {
 	if err != nil {
 		return ctx.BadRequest(err)
 	}
-	ident, err := c.identityRepository.Load(ctx, *identID)
+	ident, err := c.identityRepository.Load(ctx, identID)
 	if err != nil {
 		fmt.Printf("Auth token contains id %s of unknown Identity\n", identID)
 		return ctx.Unauthorized()
