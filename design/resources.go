@@ -190,9 +190,6 @@ var _ = Resource("login", func() {
 			GET("authorize"),
 		)
 		Description("Authorize with the ALM")
-		Response(OK, func() {
-			Media(AuthToken)
-		})
 		Response(Unauthorized)
 		Response(TemporaryRedirect)
 	})
