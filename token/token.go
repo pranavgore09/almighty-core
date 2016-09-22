@@ -56,6 +56,11 @@ func (mgm tokenManager) Extract(tokenString string) (*account.Identity, error) {
 		return nil, errors.New("Token not valid")
 	}
 
+	claimedUUID := token.Claims.(jwt.MapClaims)["uuid"]
+	if claimedUUID == nil {
+		return nil, errors.New("UUID can not be nil")
+	}
+	// in case of nil UUID, below type casting will fail hence we need above check
 	id, err := uuid.FromString(token.Claims.(jwt.MapClaims)["uuid"].(string))
 	if err != nil {
 		return nil, err
