@@ -12,6 +12,15 @@ type Lifecycle struct {
 	DeletedAt *time.Time
 }
 
+// LifecycleDeleteAsIndex is based on Lifecycle.
+// But it makes DeletedAt as a index with name "combine_with_delete_index"
+// Any attriute with this index name will be unique_together key with DeletedAt
+type LifecycleDeleteAsIndex struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `gorm:"unique_index:combine_with_delete_index"`
+}
+
 // Ensure Lifecyle implements the Equaler interface
 var _ Equaler = Lifecycle{}
 var _ Equaler = (*Lifecycle)(nil)

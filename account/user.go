@@ -3,6 +3,8 @@ package account
 import (
 	"time"
 
+	"errors"
+
 	"github.com/almighty/almighty-core/models"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
@@ -12,9 +14,9 @@ import (
 
 // User describes a User(single email) in any system
 type User struct {
-	models.Lifecycle
+	models.LifecycleDeleteAsIndex
 	ID         uuid.UUID `sql:"type:uuid default uuid_generate_v4()" gorm:"primary_key"` // This is the ID PK field
-	Email      string    `sql:"unique_index"`                                            // This is the unique email field
+	Email      string    `gorm:"unique_index:combine_with_delete_index"`                 // This is the unique email field
 	IdentityID uuid.UUID `sql:"type:uuid"`                                               // Belongs To Identity
 	Identity   Identity
 }
@@ -23,7 +25,6 @@ type User struct {
 // in the database.
 func (m User) TableName() string {
 	return "users"
-
 }
 
 // GormUserRepository is the implementation of the storage interface for User.
@@ -67,19 +68,36 @@ func (m *GormUserRepository) Load(ctx context.Context, id uuid.UUID) (*User, err
 	return &native, err
 }
 
+// loadActiveUserByEmail returns a single User with given email and deletedAt != NULL
+func (m *GormUserRepository) loadActiveUserByEmail(ctx context.Context, email string) *User {
+	defer goa.MeasureSince([]string{"goa", "db", "user", "load"}, time.Now())
+
+	var native User
+	err := m.db.Table(m.TableName()).Where("email = ? AND deleted_at IS NULL", email).First(&native).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil
+	}
+	return &native
+}
+
 // Create creates a new record.
 func (m *GormUserRepository) Create(ctx context.Context, u *User) error {
 	defer goa.MeasureSince([]string{"goa", "db", "user", "create"}, time.Now())
 
-	u.ID = uuid.NewV4()
+	user := m.loadActiveUserByEmail(ctx, u.Email)
+	if user == nil {
+		// User does not exist hence can be created safely
+		u.ID = uuid.NewV4()
 
-	err := m.db.Create(u).Error
-	if err != nil {
-		goa.LogError(ctx, "error adding User", "error", err.Error())
-		return err
+		err := m.db.Create(u).Error
+		if err != nil {
+			goa.LogError(ctx, "error adding User", "error", err.Error())
+			return err
+		}
+
+		return nil
 	}
-
-	return nil
+	return errors.New("Record already exist")
 }
 
 // Save modifies a single record
