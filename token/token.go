@@ -56,11 +56,6 @@ func (mgm tokenManager) Extract(tokenString string) (*account.Identity, error) {
 		return nil, errors.New("Token not valid")
 	}
 
-	claimedUUID := token.Claims.(jwt.MapClaims)["uuid"]
-	if claimedUUID == nil {
-		return nil, errors.New("UUID can not be nil")
-	}
-	// in case of nil UUID, below type casting will fail hence we need above check
 	id, err := uuid.FromString(token.Claims.(jwt.MapClaims)["uuid"].(string))
 	if err != nil {
 		return nil, err
@@ -91,14 +86,14 @@ func (mgm tokenManager) Locate(ctx context.Context) (uuid.UUID, error) {
 	return idTyped, nil
 }
 
-// ParsePublicKey parses a []byte representation of a public key into a rsa.PublicKey instance
-func ParsePublicKey(key []byte) (*rsa.PublicKey, error) {
-	return jwt.ParseRSAPublicKeyFromPEM(key)
+// ParsePublicKey parses a String representation of a public key into a rsa.PublicKey instance
+func ParsePublicKey(key string) (*rsa.PublicKey, error) {
+	return jwt.ParseRSAPublicKeyFromPEM([]byte(key))
 }
 
-// ParsePrivateKey parses a []byte representation of a private key into a rsa.PrivateKey instance
-func ParsePrivateKey(key []byte) (*rsa.PrivateKey, error) {
-	return jwt.ParseRSAPrivateKeyFromPEM(key)
+// ParsePrivateKey parses a String representation of a private key into a rsa.PrivateKey instance
+func ParsePrivateKey(key string) (*rsa.PrivateKey, error) {
+	return jwt.ParseRSAPrivateKeyFromPEM([]byte(key))
 }
 
 // RSAPrivateKey for signing JWT Tokens

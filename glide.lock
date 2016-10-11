@@ -1,5 +1,5 @@
-hash: 9dfc8b8dc31f0ce495de5431d40c3ad9bc83fb21b358c00dc541b0a0bdd444da
-updated: 2016-10-17T01:11:50.617319377+02:00
+hash: 4bf435c1dd3e7f59b24c14855243ad900f786dfc0bb47a9b22855a6c24048c86
+updated: 2016-10-11T12:06:09.629041574+02:00
 imports:
 - name: bitbucket.org/pkg/inflect
   version: 8961c3750a47b8c0b3e118d52513b97adf85a7e8
@@ -18,7 +18,7 @@ imports:
 - name: github.com/dimfeld/httppath
   version: c8e499c3ef3c3e272ed8bdcc1ccf39f73c88debc
 - name: github.com/dimfeld/httptreemux
-  version: 4f42e68bc5bbcb4b4af4a7d811a1d5f4111be063
+  version: b44851a265a086f908e6e81a869842941adc2c0f
 - name: github.com/elazarl/go-bindata-assetfs
   version: 57eb5e1fc594ad4b0b1dbea7b286d299e0cb43c2
   subpackages:
@@ -43,6 +43,8 @@ imports:
   - middleware/gzip
   - uuid
   - dslengine
+- name: github.com/goadesign/gorma
+  version: f7116846126a4cb17a0cddd6b3b429ad1592f260
 - name: github.com/golang/protobuf
   version: df1d3ca07d2d07bba352d5b73c4313b4e2a6203e
   subpackages:

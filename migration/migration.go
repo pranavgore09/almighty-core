@@ -1,64 +1,29 @@
 package migration
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-
+	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/models"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/net/context"
 )
 
-// AdvisoryLockID is a random number that should be used within the application
-// by anybody who wants to modify the "version" table.
-const AdvisoryLockID = 42
+// Perform executes the required migration of the database on startup
+func Perform(ctx context.Context, db *gorm.DB, witr models.WorkItemTypeRepository) error {
 
-// fn defines the type of function that can be part of a migration steps
-type fn func(tx *sql.Tx) error
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 
-// steps defines a collection of all the functions that make up a version
-type steps []fn
+	db.AutoMigrate(
+		&models.WorkItem{},
+		&models.WorkItemType{},
+		&remoteworkitem.Tracker{},
+		&remoteworkitem.TrackerQuery{},
+		&remoteworkitem.TrackerItem{},
+		&account.Identity{},
+		&account.User{})
 
-// migrations defines all a collection of all the steps
-type migrations []steps
-
-// Migrate executes the required migration of the database on startup.
-// For each successful migration, an entry will be written into the "version"
-// table, that states when a certain version was reached.
-func Migrate(db *sql.DB) error {
-	var err error
-
-	if db == nil {
-		return fmt.Errorf("Database handle is nil\n")
-	}
-
-	m := getMigrations()
-
-	var tx *sql.Tx
-	for nextVersion := int64(0); nextVersion < int64(len(m)) && err == nil; nextVersion++ {
-
-		tx, err = db.Begin()
-		if err != nil {
-			return fmt.Errorf("Failed to start transaction: %s\n", err)
-		}
-
-		err = migrateToNextVersion(tx, &nextVersion, m)
-
-		if err != nil {
-			oldErr := err
-			log.Printf("Rolling back transaction due to: %s\n", err)
-			if err = tx.Rollback(); err != nil {
-				return fmt.Errorf("Error while rolling back transaction: %s\n", err)
-			}
-			return oldErr
-		}
-
-		if err = tx.Commit(); err != nil {
-			return fmt.Errorf("Error during transaction commit: %s\n", err)
-		}
-
+	if db.Error != nil {
+		return db.Error
 	}
 
 	if err != nil {

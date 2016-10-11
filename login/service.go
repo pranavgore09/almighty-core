@@ -3,7 +3,6 @@ package login
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
@@ -11,12 +10,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-)
-
-const (
-	InvalidCodeError          string = "Invalid OAuth2.0 code"
-	InvalidStateError         string = "Invalid State"
-	PrimaryEmailNotFoundError string = "Primary email not found"
 )
 
 // Service defines the basic entrypoint required to perform a remote oauth login
@@ -43,41 +36,27 @@ type gitHubOAuth struct {
 
 // TEMP: This will leak memory in the long run with many 'failed' redirect attemts
 var stateReferer = map[string]string{}
-var mapLock sync.RWMutex
 
 func (gh *gitHubOAuth) Perform(ctx *app.AuthorizeLoginContext) error {
 	state := ctx.Params.Get("state")
 	code := ctx.Params.Get("code")
-	referer := ctx.RequestData.Header.Get("Referer")
-
 	if code != "" {
 		// After redirect from oauth provider
 
 		// validate known state
-		var knownReferer string
+		var referer string
 		defer func() {
 			delete(stateReferer, state)
 		}()
 
-		knownReferer = stateReferer[state]
-		if state == "" || knownReferer == "" {
+		if referer = stateReferer[state]; referer == "" || state == "" {
 			return ctx.Unauthorized()
 		}
 
 		ghtoken, err := gh.config.Exchange(ctx, code)
-
-		/*
-
-			In case of invalid code, this is what we get in the ghtoken object
-
-			&oauth2.Token{AccessToken:"", TokenType:"", RefreshToken:"", Expiry:time.Time{sec:0, nsec:0, loc:(*time.Location)(nil)}, raw:url.Values{"error":[]string{"bad_verification_code"}, "error_description":[]string{"The code passed is incorrect or expired."}, "error_uri":[]string{"https://developer.github.com/v3/oauth/#bad-verification-code"}}}
-
-		*/
-
-		if err != nil || ghtoken.AccessToken == "" {
+		if err != nil {
 			fmt.Println(err)
-			ctx.ResponseData.Header().Set("Location", knownReferer+"?error="+InvalidCodeError)
-			return ctx.TemporaryRedirect()
+			return ctx.Unauthorized()
 		}
 
 		emails, err := gh.getUserEmails(ctx, ghtoken)
@@ -86,13 +65,12 @@ func (gh *gitHubOAuth) Perform(ctx *app.AuthorizeLoginContext) error {
 		primaryEmail := filterPrimaryEmail(emails)
 		if primaryEmail == "" {
 			fmt.Println("No primary email found?! ", emails)
-			ctx.ResponseData.Header().Set("Location", knownReferer+"?error="+PrimaryEmailNotFoundError)
-			return ctx.TemporaryRedirect()
+			return ctx.Unauthorized()
 		}
 		users, err := gh.users.Query(account.UserByEmails([]string{primaryEmail}), account.UserWithIdentity())
 		if err != nil {
-			ctx.ResponseData.Header().Set("Location", knownReferer+"?error=Associated user not found "+err.Error())
-			return ctx.TemporaryRedirect()
+			fmt.Println(err)
+			return ctx.Unauthorized()
 		}
 		var identity account.Identity
 		if len(users) == 0 {
@@ -104,7 +82,7 @@ func (gh *gitHubOAuth) Perform(ctx *app.AuthorizeLoginContext) error {
 			}
 			fmt.Println(ghUser)
 
-			identity = account.Identity{
+			identity := account.Identity{
 				FullName: ghUser.Name,
 				ImageURL: ghUser.AvatarURL,
 			}
@@ -125,19 +103,16 @@ func (gh *gitHubOAuth) Perform(ctx *app.AuthorizeLoginContext) error {
 			return ctx.Unauthorized()
 		}
 
-		ctx.ResponseData.Header().Set("Location", knownReferer+"?token="+almtoken)
+		ctx.ResponseData.Header().Set("Location", referer+"?token="+almtoken)
 		return ctx.TemporaryRedirect()
 	}
 
 	// First time access, redirect to oauth provider
 
 	// store referer id to state for redirect later
+	referer := ctx.RequestData.Header.Get("Referer")
 	fmt.Println("Got Request from: ", referer)
 	state = uuid.NewV4().String()
-
-	mapLock.Lock()
-	defer mapLock.Unlock()
-
 	stateReferer[state] = referer
 
 	redirectURL := gh.config.AuthCodeURL(state, oauth2.AccessTypeOnline)
