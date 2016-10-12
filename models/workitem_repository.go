@@ -6,8 +6,10 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/criteria"
+	uuid "github.com/satori/go.uuid"
 )
 
 // GormWorkItemRepository implements WorkItemRepository using gorm
@@ -132,6 +134,16 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 		Type:   typeID,
 		Fields: Fields{},
 	}
+	creatorStrUUID := fields["system.creator"].(string)
+	creatorUUID, err := uuid.FromString(creatorStrUUID)
+	if err != nil {
+		return nil, err
+	}
+	filterUser := account.UserFilterByIdentity(creatorUUID, r.ts.db)
+	resultDB := filterUser(r.ts.db)
+	var u account.User
+	resultDB.First(&u)
+	wi.Fields["system.creator"] = u.Email
 	for fieldName, fieldDef := range wiType.Fields {
 		fieldValue := fields[fieldName]
 		var err error

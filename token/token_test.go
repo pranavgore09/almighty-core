@@ -21,13 +21,15 @@ func TestGenerateToken(t *testing.T) {
 
 	fullName := "Mr Test Case"
 
-	tokenString := manager.Generate(account.Identity{
+	tokenString, err := manager.Generate(account.Identity{
 		ID:       uuid.NewV4(),
 		FullName: fullName,
 		ImageURL: "http://some.com/image",
 		Emails:   []account.User{account.User{Email: "mr@test.com"}},
 	})
-
+	if err != nil {
+		t.Fatal("Could not generate Token", err)
+	}
 	ident, err := manager.Extract(tokenString)
 	if err != nil {
 		t.Fatal("Could not extract Identity from generated token", err)

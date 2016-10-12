@@ -1,7 +1,9 @@
-package models
+package gormsupport
 
 import (
 	"time"
+
+	"github.com/almighty/almighty-core/groundwork"
 )
 
 // The Lifecycle struct contains all the items from gorm.Model except the ID field,
@@ -13,11 +15,11 @@ type Lifecycle struct {
 }
 
 // Ensure Lifecyle implements the Equaler interface
-var _ Equaler = Lifecycle{}
-var _ Equaler = (*Lifecycle)(nil)
+var _ groundwork.Equaler = Lifecycle{}
+var _ groundwork.Equaler = (*Lifecycle)(nil)
 
 // Equal returns true if two Lifecycle objects are equal; otherwise false is returned.
-func (self Lifecycle) Equal(u Equaler) bool {
+func (self Lifecycle) Equal(u groundwork.Equaler) bool {
 	other, ok := u.(Lifecycle)
 	if !ok {
 		return false

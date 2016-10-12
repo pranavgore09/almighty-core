@@ -3,6 +3,7 @@ package models_test
 import (
 	"testing"
 
+	"github.com/almighty/almighty-core/groundwork"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestEnumType_Equal(t *testing.T) {
 	}
 
 	// Test type inequality
-	assert.False(t, a.Equal(models.DummyEqualer{}))
+	assert.False(t, a.Equal(groundwork.DummyEqualer{}))
 
 	// Test simple type difference
 	stInteger := models.SimpleType{Kind: models.KindInteger}

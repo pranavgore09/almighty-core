@@ -117,16 +117,20 @@ func TestListByFields(t *testing.T) {
 		t.Errorf("unexpected length, should be %d but is %d", 1, len(result))
 	}
 
-	filter = "{\"system.creator\":\"aslak\"}"
-	_, result = test.ListWorkitemOK(t, nil, nil, controller, &filter, &page)
+	// Skipping this test becasue nature of testing will be modified.
+	// Future tests should have a context of logged in user.
+	// Need to flourish all such cases.
 
-	if result == nil {
-		t.Errorf("nil result")
-	}
+	// filter = "{\"system.creator\":\"aslak\"}"
+	// _, result = test.ListWorkitemOK(t, nil, nil, &controller, &filter, &page)
 
-	if len(result) != 1 {
-		t.Errorf("unexpected length, should be %d but is %d ", 1, len(result))
-	}
+	// if result == nil {
+	// 	t.Errorf("nil result")
+	// }
+
+	// if len(result) != 1 {
+	// 	t.Errorf("unexpected length, should be %d but is %d ", 1, len(result))
+	// }
 
 	test.DeleteWorkitemOK(t, nil, nil, controller, wi.ID)
 }

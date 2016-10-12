@@ -1,9 +1,9 @@
-package models_test
+package groundwork_test
 
 import (
 	"testing"
 
-	. "github.com/almighty/almighty-core/models"
+	. "github.com/almighty/almighty-core/groundwork"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/stretchr/testify/assert"
 )
