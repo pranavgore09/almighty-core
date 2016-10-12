@@ -1,4 +1,4 @@
-package models
+package infra
 
 // The Equaler interface allows object that implement it, to be compared
 type Equaler interface {

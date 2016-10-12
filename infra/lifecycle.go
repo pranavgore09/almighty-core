@@ -1,8 +1,6 @@
-package models
+package infra
 
-import (
-	"time"
-)
+import "time"
 
 // The Lifecycle struct contains all the items from gorm.Model except the ID field,
 // hence we can embed the Lifecycle struct into Models that needs soft delete and alike.

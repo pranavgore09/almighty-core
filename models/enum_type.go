@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/almighty/almighty-core/infra"
 )
 
 type EnumType struct {
@@ -12,11 +14,11 @@ type EnumType struct {
 }
 
 // Ensure EnumType implements the Equaler interface
-var _ Equaler = EnumType{}
-var _ Equaler = (*EnumType)(nil)
+var _ infra.Equaler = EnumType{}
+var _ infra.Equaler = (*EnumType)(nil)
 
 // Equal returns true if two EnumType objects are equal; otherwise false is returned.
-func (self EnumType) Equal(u Equaler) bool {
+func (self EnumType) Equal(u infra.Equaler) bool {
 	other, ok := u.(EnumType)
 	if !ok {
 		return false

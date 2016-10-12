@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+
+	"github.com/almighty/almighty-core/infra"
 )
 
 type Fields map[string]interface{}
 
 // Ensure Fields implements the Equaler interface
-var _ Equaler = Fields{}
-var _ Equaler = (*Fields)(nil)
+var _ infra.Equaler = Fields{}
+var _ infra.Equaler = (*Fields)(nil)
 
 // Equal returns true if two Fields objects are equal; otherwise false is returned.
 // TODO: (kwk) think about a better comparison for Fields map.
-func (self Fields) Equal(u Equaler) bool {
+func (self Fields) Equal(u infra.Equaler) bool {
 	other, ok := u.(Fields)
 	if !ok {
 		return false

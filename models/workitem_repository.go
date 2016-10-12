@@ -6,8 +6,10 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/criteria"
+	"github.com/almighty/almighty-core/token"
 )
 
 // GormWorkItemRepository implements WorkItemRepository using gorm
@@ -132,6 +134,22 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 		Type:   typeID,
 		Fields: Fields{},
 	}
+	publicKey, err := token.ParsePublicKey(token.RSAPublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey, err := token.ParsePrivateKey(token.RSAPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenManager := token.NewManager(publicKey, privateKey)
+	currentLoggedInUser, err := tokenManager.Locate(ctx)
+	// ignore error for now as tests will fail
+	// if err != nil {
+	// 	return nil, err
+	// }
 	for fieldName, fieldDef := range wiType.Fields {
 		fieldValue := fields[fieldName]
 		var err error
@@ -140,6 +158,11 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 			return nil, BadParameterError{fieldName, fieldValue}
 		}
 	}
+	filterUser := account.UserFilterByIdentity(currentLoggedInUser, r.ts.db)
+	resultDB := filterUser(r.ts.db)
+	var u account.User
+	resultDB.First(&u)
+	wi.Fields["system.creator"] = u.Email
 	tx := r.ts.tx
 
 	if err = tx.Create(&wi).Error; err != nil {

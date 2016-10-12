@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/almighty/almighty-core/infra"
 )
 
 // constants for describing possible field types
@@ -36,7 +38,7 @@ type FieldType interface {
 	// ConvertToModel converts a field value for storage in the db
 	ConvertFromModel(value interface{}) (interface{}, error)
 	// Implement the Equaler interface
-	Equal(u Equaler) bool
+	Equal(u infra.Equaler) bool
 }
 
 // FieldDefintion describes type & other restrictions of a field
@@ -46,11 +48,11 @@ type FieldDefinition struct {
 }
 
 // Ensure FieldDefinition implements the Equaler interface
-var _ Equaler = FieldDefinition{}
-var _ Equaler = (*FieldDefinition)(nil)
+var _ infra.Equaler = FieldDefinition{}
+var _ infra.Equaler = (*FieldDefinition)(nil)
 
 // Equal returns true if two FieldDefinition objects are equal; otherwise false is returned.
-func (self FieldDefinition) Equal(u Equaler) bool {
+func (self FieldDefinition) Equal(u infra.Equaler) bool {
 	other, ok := u.(FieldDefinition)
 	if !ok {
 		return false
@@ -83,11 +85,11 @@ type rawFieldDef struct {
 }
 
 // Ensure rawFieldDef implements the Equaler interface
-var _ Equaler = rawFieldDef{}
-var _ Equaler = (*rawFieldDef)(nil)
+var _ infra.Equaler = rawFieldDef{}
+var _ infra.Equaler = (*rawFieldDef)(nil)
 
 // Equal returns true if two rawFieldDef objects are equal; otherwise false is returned.
-func (self rawFieldDef) Equal(u Equaler) bool {
+func (self rawFieldDef) Equal(u infra.Equaler) bool {
 	other, ok := u.(rawFieldDef)
 	if !ok {
 		return false
@@ -131,6 +133,13 @@ func (f *FieldDefinition) UnmarshalJSON(bytes []byte) error {
 	case KindEnum:
 		theType := EnumType{}
 		err = json.Unmarshal(*temp.Type, &theType)
+		if err != nil {
+			return err
+		}
+		*f = FieldDefinition{Type: theType, Required: temp.Required}
+	case KindUser:
+		theType := UserType{}
+		err := json.Unmarshal(*temp.Type, &theType)
 		if err != nil {
 			return err
 		}
