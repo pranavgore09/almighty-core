@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 	. "github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +15,7 @@ func TestSimpleTypeEqual(t *testing.T) {
 
 	// Test type difference
 	a := SimpleType{Kind: KindString}
-	assert.False(t, a.Equal(groundwork.DummyEqualer{}))
+	assert.False(t, a.Equal(compare.DummyEqualer{}))
 
 	// Test kind difference
 	b := SimpleType{Kind: KindInteger}

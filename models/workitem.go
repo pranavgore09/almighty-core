@@ -1,8 +1,8 @@
 package models
 
 import (
+	"github.com/almighty/almighty-core/compare"
 	"github.com/almighty/almighty-core/gormsupport"
-	"github.com/almighty/almighty-core/groundwork"
 )
 
 // WorkItem represents a work item as it is stored in the database
@@ -18,11 +18,11 @@ type WorkItem struct {
 }
 
 // Ensure WorkItem implements the Equaler interface
-var _ groundwork.Equaler = WorkItem{}
-var _ groundwork.Equaler = (*WorkItem)(nil)
+var _ compare.Equaler = WorkItem{}
+var _ compare.Equaler = (*WorkItem)(nil)
 
 // Equal returns true if two WorkItem objects are equal; otherwise false is returned.
-func (self WorkItem) Equal(u groundwork.Equaler) bool {
+func (self WorkItem) Equal(u compare.Equaler) bool {
 	other, ok := u.(WorkItem)
 	if !ok {
 		return false

@@ -6,18 +6,18 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 )
 
 type Fields map[string]interface{}
 
 // Ensure Fields implements the Equaler interface
-var _ groundwork.Equaler = Fields{}
-var _ groundwork.Equaler = (*Fields)(nil)
+var _ compare.Equaler = Fields{}
+var _ compare.Equaler = (*Fields)(nil)
 
 // Equal returns true if two Fields objects are equal; otherwise false is returned.
 // TODO: (kwk) think about a better comparison for Fields map.
-func (self Fields) Equal(u groundwork.Equaler) bool {
+func (self Fields) Equal(u compare.Equaler) bool {
 	other, ok := u.(Fields)
 	if !ok {
 		return false

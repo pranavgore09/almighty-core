@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 )
 
 type EnumType struct {
@@ -14,11 +14,11 @@ type EnumType struct {
 }
 
 // Ensure EnumType implements the Equaler interface
-var _ groundwork.Equaler = EnumType{}
-var _ groundwork.Equaler = (*EnumType)(nil)
+var _ compare.Equaler = EnumType{}
+var _ compare.Equaler = (*EnumType)(nil)
 
 // Equal returns true if two EnumType objects are equal; otherwise false is returned.
-func (self EnumType) Equal(u groundwork.Equaler) bool {
+func (self EnumType) Equal(u compare.Equaler) bool {
 	other, ok := u.(EnumType)
 	if !ok {
 		return false

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 )
 
 //ListType describes a list of SimpleType values
@@ -14,11 +14,11 @@ type ListType struct {
 }
 
 // Ensure ListType implements the Equaler interface
-var _ groundwork.Equaler = ListType{}
-var _ groundwork.Equaler = (*ListType)(nil)
+var _ compare.Equaler = ListType{}
+var _ compare.Equaler = (*ListType)(nil)
 
 // Equal returns true if two ListType objects are equal; otherwise false is returned.
-func (self ListType) Equal(u groundwork.Equaler) bool {
+func (self ListType) Equal(u compare.Equaler) bool {
 	other, ok := u.(ListType)
 	if !ok {
 		return false

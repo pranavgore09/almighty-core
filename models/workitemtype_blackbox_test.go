@@ -8,8 +8,8 @@ import (
 
 	"time"
 
+	"github.com/almighty/almighty-core/compare"
 	"github.com/almighty/almighty-core/gormsupport"
-	"github.com/almighty/almighty-core/groundwork"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/stretchr/testify/assert"
@@ -101,7 +101,7 @@ func TestWorkItemType_Equal(t *testing.T) {
 	}
 
 	// Test types
-	b := groundwork.DummyEqualer{}
+	b := compare.DummyEqualer{}
 	assert.False(t, a.Equal(b))
 
 	// Test lifecycle

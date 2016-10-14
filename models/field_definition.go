@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 )
 
 // constants for describing possible field types
@@ -38,7 +38,7 @@ type FieldType interface {
 	// ConvertToModel converts a field value for storage in the db
 	ConvertFromModel(value interface{}) (interface{}, error)
 	// Implement the Equaler interface
-	Equal(u groundwork.Equaler) bool
+	Equal(u compare.Equaler) bool
 }
 
 // FieldDefintion describes type & other restrictions of a field
@@ -48,11 +48,11 @@ type FieldDefinition struct {
 }
 
 // Ensure FieldDefinition implements the Equaler interface
-var _ groundwork.Equaler = FieldDefinition{}
-var _ groundwork.Equaler = (*FieldDefinition)(nil)
+var _ compare.Equaler = FieldDefinition{}
+var _ compare.Equaler = (*FieldDefinition)(nil)
 
 // Equal returns true if two FieldDefinition objects are equal; otherwise false is returned.
-func (self FieldDefinition) Equal(u groundwork.Equaler) bool {
+func (self FieldDefinition) Equal(u compare.Equaler) bool {
 	other, ok := u.(FieldDefinition)
 	if !ok {
 		return false
@@ -85,11 +85,11 @@ type rawFieldDef struct {
 }
 
 // Ensure rawFieldDef implements the Equaler interface
-var _ groundwork.Equaler = rawFieldDef{}
-var _ groundwork.Equaler = (*rawFieldDef)(nil)
+var _ compare.Equaler = rawFieldDef{}
+var _ compare.Equaler = (*rawFieldDef)(nil)
 
 // Equal returns true if two rawFieldDef objects are equal; otherwise false is returned.
-func (self rawFieldDef) Equal(u groundwork.Equaler) bool {
+func (self rawFieldDef) Equal(u compare.Equaler) bool {
 	other, ok := u.(rawFieldDef)
 	if !ok {
 		return false

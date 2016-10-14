@@ -1,9 +1,9 @@
-package groundwork_test
+package compare_test
 
 import (
 	"testing"
 
-	. "github.com/almighty/almighty-core/groundwork"
+	. "github.com/almighty/almighty-core/compare"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/stretchr/testify/assert"
 )

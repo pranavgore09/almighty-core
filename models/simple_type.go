@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/almighty/almighty-core/groundwork"
+	"github.com/almighty/almighty-core/compare"
 	"github.com/asaskevich/govalidator"
 )
 
@@ -16,11 +16,11 @@ type SimpleType struct {
 }
 
 // Ensure SimpleType implements the Equaler interface
-var _ groundwork.Equaler = SimpleType{}
-var _ groundwork.Equaler = (*SimpleType)(nil)
+var _ compare.Equaler = SimpleType{}
+var _ compare.Equaler = (*SimpleType)(nil)
 
 // Equal returns true if two SimpleType objects are equal; otherwise false is returned.
-func (self SimpleType) Equal(u groundwork.Equaler) bool {
+func (self SimpleType) Equal(u compare.Equaler) bool {
 	other, ok := u.(SimpleType)
 	if !ok {
 		return false
