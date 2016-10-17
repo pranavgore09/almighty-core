@@ -13,7 +13,6 @@ type UserType struct {
 
 // ConvertToModel responsible for converting input value into a valid database representable user object
 func (fieldType UserType) ConvertToModel(value interface{}) (interface{}, error) {
-	// input value must be validated against DB
 	if value == nil {
 		return nil, nil
 	}
@@ -21,7 +20,6 @@ func (fieldType UserType) ConvertToModel(value interface{}) (interface{}, error)
 	if valueType.Kind() != reflect.String {
 		return nil, fmt.Errorf("value %v should be %s, but is %s", value, "string", valueType.Name())
 	}
-	// check with DB
 	return value, nil
 }
 
