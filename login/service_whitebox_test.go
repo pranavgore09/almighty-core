@@ -79,6 +79,7 @@ func tearDown() {
 func TestValidOAuthAccessToken(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 	setup()
+	defer tearDown()
 
 	accessToken := &oauth2.Token{
 		AccessToken: actualToken,
@@ -88,14 +89,12 @@ func TestValidOAuthAccessToken(t *testing.T) {
 	emails, err := loginService.getUserEmails(context.Background(), accessToken)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, emails)
-
-	tearDown()
-
 }
 
 func TestInvalidOAuthAccessToken(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 	setup()
+	defer tearDown()
 
 	if loginService == nil {
 		setup()
@@ -111,15 +110,13 @@ func TestInvalidOAuthAccessToken(t *testing.T) {
 	emails, err := loginService.getUserEmails(context.Background(), accessToken)
 	assert.Nil(t, err)
 	assert.Empty(t, emails)
-
-	tearDown()
-
 }
 
 func TestGetUserEmails(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 
 	setup()
+	defer tearDown()
 
 	accessToken := &oauth2.Token{
 		AccessToken: actualToken,
@@ -131,14 +128,12 @@ func TestGetUserEmails(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, githubEmails)
 	assert.NotEmpty(t, githubEmails)
-
-	tearDown()
-
 }
 
 func TestGetUser(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 	setup()
+	defer tearDown()
 
 	accessToken := &oauth2.Token{
 		AccessToken: actualToken,
@@ -149,11 +144,10 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, githubUser)
 	t.Log(githubUser)
-	tearDown()
 }
 
 func TestFilterPrimaryEmail(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
-	setup()
-	tearDown()
+
+	t.Skip("Not implemented")
 }

@@ -137,13 +137,16 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 	creatorStrUUID := fields["system.creator"].(string)
 	creatorUUID, err := uuid.FromString(creatorStrUUID)
 	if err != nil {
-		return nil, err
+		// fmt.Println("OOPsss--")
+		// return nil, err
+		wi.Fields["system.creator"] = creatorStrUUID
+	} else {
+		filterUser := account.UserFilterByIdentity(creatorUUID, r.ts.db)
+		resultDB := filterUser(r.ts.db)
+		var u account.User
+		resultDB.First(&u)
+		wi.Fields["system.creator"] = u.Email
 	}
-	filterUser := account.UserFilterByIdentity(creatorUUID, r.ts.db)
-	resultDB := filterUser(r.ts.db)
-	var u account.User
-	resultDB.First(&u)
-	wi.Fields["system.creator"] = u.Email
 	for fieldName, fieldDef := range wiType.Fields {
 		fieldValue := fields[fieldName]
 		var err error
@@ -176,7 +179,7 @@ func (r *GormWorkItemRepository) List(ctx context.Context, criteria criteria.Exp
 	log.Printf("executing query: '%s' with params %v", where, parameters)
 
 	var rows []WorkItem
-	db := r.ts.tx.Where(where, parameters)
+	db := r.ts.TX().Where(where, parameters)
 	if start != nil {
 		db = db.Offset(*start)
 	}

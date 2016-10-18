@@ -101,12 +101,12 @@ func (c *WorkitemController) List(ctx *app.ListWorkitemContext) error {
 // Create runs the create action.
 func (c *WorkitemController) Create(ctx *app.CreateWorkitemContext) error {
 	return transaction.Do(c.ts, func() error {
-		publicKey, err := token.ParsePublicKey(token.RSAPublicKey)
+		publicKey, err := token.ParsePublicKey([]byte(token.RSAPublicKey))
 		if err != nil {
 			panic(err)
 		}
 
-		privateKey, err := token.ParsePrivateKey(token.RSAPrivateKey)
+		privateKey, err := token.ParsePrivateKey([]byte(token.RSAPrivateKey))
 		if err != nil {
 			panic(err)
 		}

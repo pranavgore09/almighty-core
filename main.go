@@ -110,13 +110,13 @@ func main() {
 	witRepo := models.NewWorkItemTypeRepository(ts)
 	wiRepo := models.NewWorkItemRepository(ts, witRepo)
 
-	identityRepository := account.NewIdentityRepository(db)
-	userRepository := account.NewUserRepository(db)
-
-	if err := transaction.Do(ts, func() error {
-		return migration.Perform(context.Background(), ts.TX(), witRepo)
-	}); err != nil {
-		panic(err.Error())
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
+	if configuration.GetPopulateCommonTypes() {
+		if err := transaction.Do(ts, func() error {
+			return migration.PopulateCommonTypes(context.Background(), ts.TX(), witRepo)
+		}); err != nil {
+			panic(err.Error())
+		}
 	}
 
 	// Scheduler to fetch and import remote tracker items
@@ -134,23 +134,26 @@ func main() {
 	service.Use(middleware.ErrorHandler(service, true))
 	service.Use(middleware.Recover())
 
-	publicKey, err := token.ParsePublicKey(token.RSAPublicKey)
+	privateKey, err := token.ParsePrivateKey(configuration.GetTokenPrivateKey())
+	if err != nil {
+		panic(err)
+	}
+	publicKey, err := token.ParsePublicKey(configuration.GetTokenPublicKey())
 	if err != nil {
 		panic(err)
 	}
 
-	privateKey, err := token.ParsePrivateKey(token.RSAPrivateKey)
-	if err != nil {
-		panic(err)
-	}
+	// Setup Account/Login/Security
+	identityRepository := account.NewIdentityRepository(db)
+	userRepository := account.NewUserRepository(db)
 
 	tokenManager := token.NewManager(publicKey, privateKey)
 	app.UseJWTMiddleware(service, jwt.New(publicKey, nil, app.NewJWTSecurity()))
 
 	// Mount "login" controller
 	oauth := &oauth2.Config{
-		ClientID:     "875da0d2113ba0a6951d",
-		ClientSecret: "2fe6736e90a9283036a37059d75ac0c82f4f5288",
+		ClientID:     configuration.GetGithubClientID(),
+		ClientSecret: configuration.GetGithubSecret(),
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}

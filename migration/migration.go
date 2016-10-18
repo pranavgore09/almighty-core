@@ -1,29 +1,65 @@
 package migration
 
 import (
-	"github.com/almighty/almighty-core/account"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/models"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/net/context"
 )
 
-// Perform executes the required migration of the database on startup
-func Perform(ctx context.Context, db *gorm.DB, witr models.WorkItemTypeRepository) error {
+// AdvisoryLockID is a random number that should be used within the application
+// by anybody who wants to modify the "version" table.
+const AdvisoryLockID = 42
 
-	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+// fn defines the type of function that can be part of a migration steps
+type fn func(tx *sql.Tx) error
 
-	db.AutoMigrate(
-		&models.WorkItem{},
-		&models.WorkItemType{},
-		&remoteworkitem.Tracker{},
-		&remoteworkitem.TrackerQuery{},
-		&remoteworkitem.TrackerItem{},
-		&account.Identity{},
-		&account.User{})
+// steps defines a collection of all the functions that make up a version
+type steps []fn
 
-	if db.Error != nil {
-		return db.Error
+// migrations defines all a collection of all the steps
+type migrations []steps
+
+// Migrate executes the required migration of the database on startup.
+// For each successful migration, an entry will be written into the "version"
+// table, that states when a certain version was reached.
+func Migrate(db *sql.DB) error {
+	var err error
+
+	if db == nil {
+		return fmt.Errorf("Database handle is nil\n")
+	}
+
+	m := getMigrations()
+
+	var tx *sql.Tx
+	for nextVersion := int64(0); nextVersion < int64(len(m)) && err == nil; nextVersion++ {
+
+		tx, err = db.Begin()
+		if err != nil {
+			return fmt.Errorf("Failed to start transaction: %s\n", err)
+		}
+
+		err = migrateToNextVersion(tx, &nextVersion, m)
+
+		if err != nil {
+			oldErr := err
+			log.Printf("Rolling back transaction due to: %s\n", err)
+			if err = tx.Rollback(); err != nil {
+				return fmt.Errorf("Error while rolling back transaction: %s\n", err)
+			}
+			return oldErr
+		}
+
+		if err = tx.Commit(); err != nil {
+			return fmt.Errorf("Error during transaction commit: %s\n", err)
+		}
+
 	}
 
 	if err != nil {
@@ -46,7 +82,10 @@ func getMigrations() migrations {
 	m = append(m, steps{executeSQLFile("001-common.sql")})
 
 	// Version 2
-	m = append(m, steps{executeSQLFile("002-login.sql")})
+	m = append(m, steps{executeSQLFile("002-tracker-items.sql")})
+
+	// Version 3
+	m = append(m, steps{executeSQLFile("003-login.sql")})
 
 	// Version N
 	//
@@ -164,73 +203,86 @@ func PopulateCommonTypes(ctx context.Context, db *gorm.DB, witr models.WorkItemT
 	// q := `ALTER TABLE "tracker_queries" ADD CONSTRAINT "tracker_fk" FOREIGN KEY ("tracker") REFERENCES "trackers" ON DELETE CASCADE`
 	// db.Exec(q)
 
-	if err := createSystemUserstory(ctx, witr); err != nil {
+	if err := createOrUpdateSystemUserstory(ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createSystemValueProposition(ctx, witr); err != nil {
+	if err := createOrUpdateSystemValueProposition(ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createSystemFundamental(ctx, witr); err != nil {
+	if err := createOrUpdateSystemFundamental(ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createSystemExperience(ctx, witr); err != nil {
+	if err := createOrUpdateSystemExperience(ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createSystemFeature(ctx, witr); err != nil {
+	if err := createOrUpdateSystemFeature(ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createSystemBug(ctx, witr); err != nil {
+	if err := createOrUpdateSystemBug(ctx, witr, db); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createSystemUserstory(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.userstory", ctx, witr)
+func createOrUpdateSystemUserstory(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.userstory", ctx, witr, db)
 }
 
-func createSystemValueProposition(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.valueproposition", ctx, witr)
+func createOrUpdateSystemValueProposition(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.valueproposition", ctx, witr, db)
 }
 
-func createSystemFundamental(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.fundamental", ctx, witr)
+func createOrUpdateSystemFundamental(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.fundamental", ctx, witr, db)
 }
 
-func createSystemExperience(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.experience", ctx, witr)
+func createOrUpdateSystemExperience(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.experience", ctx, witr, db)
 }
 
-func createSystemFeature(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.feature", ctx, witr)
+func createOrUpdateSystemFeature(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.feature", ctx, witr, db)
 }
 
-func createSystemBug(ctx context.Context, witr models.WorkItemTypeRepository) error {
-	return createCommon("system.bug", ctx, witr)
+func createOrUpdateSystemBug(ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	return createOrUpdateCommon("system.bug", ctx, witr, db)
 }
 
-func createCommon(typeName string, ctx context.Context, witr models.WorkItemTypeRepository) error {
+func createOrUpdateCommon(typeName string, ctx context.Context, witr models.WorkItemTypeRepository, db *gorm.DB) error {
+	stString := "string"
+	workItemTypeFields := map[string]app.FieldDefinition{
+		"system.title":          app.FieldDefinition{Type: &app.FieldType{Kind: "string"}, Required: true},
+		"system.description":    app.FieldDefinition{Type: &app.FieldType{Kind: "string"}, Required: false},
+		"system.creator":        app.FieldDefinition{Type: &app.FieldType{Kind: "user"}, Required: true},
+		"system.assignee":       app.FieldDefinition{Type: &app.FieldType{Kind: "user"}, Required: false},
+		"system.remote_item_id": app.FieldDefinition{Type: &app.FieldType{Kind: "string"}, Required: false},
+		"system.state": app.FieldDefinition{
+			Type: &app.FieldType{
+				BaseType: &stString,
+				Kind:     "enum",
+				Values:   []interface{}{"new", "open", "in progress", "resolved", "closed"},
+			},
+			Required: true,
+		},
+	}
+
 	_, err := witr.Load(ctx, typeName)
 	switch err.(type) {
 	case models.NotFoundError:
-		stString := "string"
-		_, err := witr.Create(ctx, nil, typeName, map[string]app.FieldDefinition{
-			"system.title":       app.FieldDefinition{Type: &app.FieldType{Kind: "string"}, Required: true},
-			"system.description": app.FieldDefinition{Type: &app.FieldType{Kind: "string"}, Required: false},
-			"system.creator":     app.FieldDefinition{Type: &app.FieldType{Kind: "user"}, Required: true},
-			"system.assignee":    app.FieldDefinition{Type: &app.FieldType{Kind: "user"}, Required: false},
-			"system.state": app.FieldDefinition{
-				Type: &app.FieldType{
-					BaseType: &stString,
-					Kind:     "enum",
-					Values:   []interface{}{"new", "in progress", "resolved", "closed"},
-				},
-				Required: true,
-			},
-		})
+		_, err := witr.Create(ctx, nil, typeName, workItemTypeFields)
 		if err != nil {
 			return err
 		}
+	case nil:
+		fmt.Println("Work item type exists, will update/overwrite the fields only ")
+		convertedFields, err := models.TEMPConvertFieldTypesToModel(workItemTypeFields)
+		if err != nil {
+			return err
+		}
+		jsonArray, err := json.Marshal(convertedFields)
+		jsonString := string(jsonArray[:])
+		q := fmt.Sprintf(`UPDATE work_item_types SET fields='%s' where name = '%s'`, jsonString, typeName)
+		db.Exec(q)
 	}
 	return nil
 }

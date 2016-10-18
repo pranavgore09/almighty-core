@@ -22,8 +22,8 @@ func newUserController() *UserController {
 }
 
 func newUserControllerWithRepo(repo *TestIdentityRepository) *UserController {
-	pub, _ := almtoken.ParsePublicKey(almtoken.RSAPublicKey)
-	priv, _ := almtoken.ParsePrivateKey(almtoken.RSAPrivateKey)
+	pub, _ := almtoken.ParsePublicKey([]byte(almtoken.RSAPublicKey))
+	priv, _ := almtoken.ParsePrivateKey([]byte(almtoken.RSAPrivateKey))
 	return NewUserController(goa.New("alm-test"), repo, almtoken.NewManager(pub, priv))
 }
 
