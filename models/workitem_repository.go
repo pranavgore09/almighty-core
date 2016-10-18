@@ -137,8 +137,6 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 	creatorStrUUID := fields["system.creator"].(string)
 	creatorUUID, err := uuid.FromString(creatorStrUUID)
 	if err != nil {
-		// fmt.Println("OOPsss--")
-		// return nil, err
 		wi.Fields["system.creator"] = creatorStrUUID
 	} else {
 		filterUser := account.UserFilterByIdentity(creatorUUID, r.ts.db)
