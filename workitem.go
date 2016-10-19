@@ -11,7 +11,6 @@ import (
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/query/simple"
-	"github.com/almighty/almighty-core/token"
 	"github.com/almighty/almighty-core/transaction"
 )
 
@@ -101,25 +100,6 @@ func (c *WorkitemController) List(ctx *app.ListWorkitemContext) error {
 // Create runs the create action.
 func (c *WorkitemController) Create(ctx *app.CreateWorkitemContext) error {
 	return transaction.Do(c.ts, func() error {
-		publicKey, err := token.ParsePublicKey([]byte(token.RSAPublicKey))
-		if err != nil {
-			panic(err)
-		}
-
-		privateKey, err := token.ParsePrivateKey([]byte(token.RSAPrivateKey))
-		if err != nil {
-			panic(err)
-		}
-
-		tokenManager := token.NewManager(publicKey, privateKey)
-		currentLoggedInUser, err := tokenManager.Locate(ctx)
-
-		// ToDo: Need to find out a way for login in test framework.
-		// if err != nil {
-		// 	// should panic because, this API is secured and should be caught by jwt-middleware
-		// 	return err
-		// }
-		ctx.Payload.Fields["system.creator"] = currentLoggedInUser.String()
 		wi, err := c.wiRepository.Create(ctx.Context, ctx.Payload.Type, ctx.Payload.Fields)
 
 		if err != nil {

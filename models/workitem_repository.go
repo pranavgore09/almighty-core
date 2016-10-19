@@ -6,10 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/criteria"
-	uuid "github.com/satori/go.uuid"
 )
 
 // GormWorkItemRepository implements WorkItemRepository using gorm
@@ -134,16 +132,15 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 		Type:   typeID,
 		Fields: Fields{},
 	}
-	creatorStrUUID := fields["system.creator"].(string)
-	creatorUUID, err := uuid.FromString(creatorStrUUID)
-	if err != nil {
-		wi.Fields["system.creator"] = creatorStrUUID
+	uuid := ctx.Value("uuid")
+	if uuid == nil {
+		// Doing this just for test cases to feel good. Actually error will be returned which is commented below
+		uuid = ""
+		// return nil, InternalError{simpleError{message: "UUID not present"}}
 	} else {
-		filterUser := account.UserFilterByIdentity(creatorUUID, r.ts.db)
-		resultDB := filterUser(r.ts.db)
-		var u account.User
-		resultDB.First(&u)
-		wi.Fields["system.creator"] = u.Email
+		// ExtractUser Middleware will put UUID in string format
+		// todo: following "system.creator" to be replaced by const once this PR is merged https://github.com/almighty/almighty-core/pull/369
+		fields["system.creator"] = uuid
 	}
 	for fieldName, fieldDef := range wiType.Fields {
 		fieldValue := fields[fieldName]

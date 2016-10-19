@@ -143,6 +143,7 @@ func main() {
 		panic(err)
 	}
 
+	service.Use(ConfigureExtractUser(publicKey, privateKey))
 	// Setup Account/Login/Security
 	identityRepository := account.NewIdentityRepository(db)
 	userRepository := account.NewUserRepository(db)
