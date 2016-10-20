@@ -20,8 +20,13 @@ func ConfigureExtractUser(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) 
 	return func(h goa.Handler) goa.Handler {
 		return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 			// for now ignore the error becasue still test for logged in user is not done.
-			uuid, _ := manager.Locate(ctx)
-			ctxWithUser := context.WithValue(ctx, "uuid", uuid.String())
+			uuid, err := manager.Locate(ctx)
+			var value string
+			if err != nil {
+				value = "guest user"
+			}
+			value = uuid.String()
+			ctxWithUser := context.WithValue(ctx, "uuid", value)
 			return h(ctxWithUser, rw, req)
 		}
 	}

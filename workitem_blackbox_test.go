@@ -3,6 +3,8 @@ package main_test
 import (
 	"testing"
 
+	"golang.org/x/net/context"
+
 	. "github.com/almighty/almighty-core"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/app/test"
@@ -30,7 +32,7 @@ func TestGetWorkItem(t *testing.T) {
 			"system.state":   "closed"},
 	}
 
-	_, result := test.CreateWorkitemCreated(t, nil, nil, controller, &payload)
+	_, result := test.CreateWorkitemCreated(t, context.WithValue(svc.Context, "uuid", "Test Developer"), nil, controller, &payload)
 
 	_, wi := test.ShowWorkitemOK(t, nil, nil, controller, result.ID)
 
@@ -79,11 +81,11 @@ func TestCreateWI(t *testing.T) {
 			"system.state":   "new",
 		},
 	}
-
-	_, created := test.CreateWorkitemCreated(t, nil, nil, controller, &payload)
+	_, created := test.CreateWorkitemCreated(t, context.WithValue(svc.Context, "uuid", "Test Developer"), nil, controller, &payload)
 	if created.ID == "" {
 		t.Error("no id")
 	}
+	assert.Equal(t, "Test Developer", created.Fields["system.creator"])
 }
 
 func TestListByFields(t *testing.T) {
@@ -102,8 +104,7 @@ func TestListByFields(t *testing.T) {
 			"system.creator": "aslak",
 			"system.state":   "closed"},
 	}
-
-	_, wi := test.CreateWorkitemCreated(t, nil, nil, controller, &payload)
+	_, wi := test.CreateWorkitemCreated(t, context.WithValue(svc.Context, "uuid", "Test Developer"), nil, controller, &payload)
 
 	filter := "{\"system.title\":\"run integration test\"}"
 	page := "0,1"

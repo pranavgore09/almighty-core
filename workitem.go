@@ -100,7 +100,7 @@ func (c *WorkitemController) List(ctx *app.ListWorkitemContext) error {
 // Create runs the create action.
 func (c *WorkitemController) Create(ctx *app.CreateWorkitemContext) error {
 	return transaction.Do(c.ts, func() error {
-		wi, err := c.wiRepository.Create(ctx.Context, ctx.Payload.Type, ctx.Payload.Fields)
+		wi, err := c.wiRepository.Create(ctx.Context, ctx.Payload.Type, ctx.Payload.Fields, ctx.Value("uuid").(string))
 
 		if err != nil {
 			switch err := err.(type) {

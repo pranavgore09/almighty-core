@@ -123,7 +123,7 @@ func (r *GormWorkItemRepository) Save(ctx context.Context, wi app.WorkItem) (*ap
 
 // Create creates a new work item in the repository
 // returns BadParameterError, ConversionError or InternalError
-func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fields map[string]interface{}) (*app.WorkItem, error) {
+func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fields map[string]interface{}, creator string) (*app.WorkItem, error) {
 	wiType, err := r.wir.loadTypeFromDB(ctx, typeID)
 	if err != nil {
 		return nil, BadParameterError{parameter: "type", value: typeID}
@@ -132,16 +132,17 @@ func (r *GormWorkItemRepository) Create(ctx context.Context, typeID string, fiel
 		Type:   typeID,
 		Fields: Fields{},
 	}
-	uuid := ctx.Value("uuid")
-	if uuid == nil {
-		// Doing this just for test cases to feel good. Actually error will be returned which is commented below
-		uuid = ""
-		// return nil, InternalError{simpleError{message: "UUID not present"}}
-	} else {
-		// ExtractUser Middleware will put UUID in string format
-		// todo: following "system.creator" to be replaced by const once this PR is merged https://github.com/almighty/almighty-core/pull/369
-		fields["system.creator"] = uuid
-	}
+	// uuid := ctx.Value("uuid")
+	// if uuid == nil {
+	// 	// Doing this just for test cases to feel good. Actually error will be returned which is commented below
+	// 	// uuid = ""
+	// 	return nil, InternalError{simpleError{message: "UUID not present"}}
+	// } else {
+	// 	// ExtractUser Middleware will put UUID in string format
+	// 	// todo: following "system.creator" to be replaced by const once this PR is merged https://github.com/almighty/almighty-core/pull/369
+	// 	fields["system.creator"] = uuid
+	// }
+	fields["system.creator"] = creator
 	for fieldName, fieldDef := range wiType.Fields {
 		fieldValue := fields[fieldName]
 		var err error

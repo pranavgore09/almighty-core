@@ -71,7 +71,7 @@ func convert(ts *models.GormTransactionSupport, tqID int, item map[string]string
 	} else {
 		fmt.Println("Work item not found , will now create new work item")
 
-		newWorkItem, err = wir.Create(context.Background(), "system.bug", workItem.Fields)
+		newWorkItem, err = wir.Create(context.Background(), "system.bug", workItem.Fields, workItem.Fields["system.creator"].(string))
 		if err != nil {
 			fmt.Println("Error creating work item : ", err)
 		}
