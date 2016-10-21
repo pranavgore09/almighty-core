@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/search"
 	"github.com/almighty/almighty-core/transaction"
@@ -21,11 +23,11 @@ func NewSearchController(service *goa.Service, sRepository search.Repository, ts
 
 // Show runs the show action.
 func (c *SearchController) Show(ctx *app.ShowSearchContext) error {
-	// SearchController_Show: start_implement
-
-	// Put your logic here
-
-	// SearchController_Show: end_implement
-	res := app.WorkItemCollection{}
-	return ctx.OK(res)
+	return transaction.Do(c.ts, func() error {
+		result, err := c.sRepository.Search(ctx.Context, *ctx.Q)
+		if err != nil {
+			return goa.ErrInternal(fmt.Sprintf("Error listing work items: %s", err.Error()))
+		}
+		return ctx.OK(result)
+	})
 }

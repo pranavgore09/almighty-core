@@ -192,7 +192,7 @@ func main() {
 	app.MountUserController(service, userCtrl)
 
 	ts3 := models.NewGormTransactionSupport(db)
-	repo4 := search.NewGormSearchRepository(ts3)
+	repo4 := search.NewGormSearchRepository(ts3, witRepo)
 
 	// Mount "search" controller
 	searchCtrl := NewSearchController(service, repo4, ts3)
