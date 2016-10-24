@@ -1,9 +1,10 @@
 package search
 
 import (
-	"context"
 	"log"
 	"strconv"
+
+	"golang.org/x/net/context"
 
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/models"

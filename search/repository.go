@@ -1,7 +1,7 @@
 package search
 
 import (
-	"context"
+	"golang.org/x/net/context"
 
 	"github.com/almighty/almighty-core/app"
 )
