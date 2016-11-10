@@ -3,6 +3,7 @@ package account
 import (
 	"time"
 
+	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/gormsupport"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
@@ -33,7 +34,7 @@ type GormIdentityRepository struct {
 }
 
 // NewIdentityRepository creates a new storage type.
-func NewIdentityRepository(db *gorm.DB) IdentityRepository {
+func NewIdentityRepository(db *gorm.DB) *GormIdentityRepository {
 	return &GormIdentityRepository{db: db}
 }
 
@@ -120,6 +121,18 @@ func (m *GormIdentityRepository) Query(funcs ...func(*gorm.DB) *gorm.DB) ([]*Ide
 	var objs []*Identity
 
 	err := m.db.Scopes(funcs...).Table(m.TableName()).Find(&objs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return objs, nil
+}
+
+// List return all user identities
+func (m *GormIdentityRepository) List(ctx context.Context) ([]*app.Identity, error) {
+	defer goa.MeasureSince([]string{"goa", "db", "identity", "list"}, time.Now())
+	var objs []*app.Identity
+
+	err := m.db.Table(m.TableName()).Find(&objs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
