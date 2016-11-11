@@ -41,5 +41,5 @@ func TestListIdentities(t *testing.T) {
 	}()
 
 	_, ic2 := test.ListIdentityOK(t, service.Context, service, identityController)
-	require.NotNil(t, ic)
+	require.NotNil(t, ic2)
 }
