@@ -209,7 +209,7 @@ var _ = a.Resource("identity", func() {
 		)
 		a.Description("List all identities.")
 		a.Response(d.OK, func() {
-			a.Media(a.CollectionOf(Identity))
+			a.Media(IdentityArray)
 		})
 		a.Response(d.BadRequest, func() {
 			a.Media(d.ErrorMedia)

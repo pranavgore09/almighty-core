@@ -129,3 +129,10 @@ var UpdateTrackerQueryAlternatePayload = a.Type("UpdateTrackerQueryAlternatePayl
 	})
 	a.Required("query", "schedule", "trackerID")
 })
+
+// IdentityData represents an identified user object
+var IdentityData = a.Type("IdentityData", func() {
+	a.Attribute("id", d.String, "unique id for the user identity")
+	a.Attribute("fullName", d.String, "The users full name")
+	a.Attribute("imageURL", d.String, "The avatar image for the user")
+})

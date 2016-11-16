@@ -127,14 +127,33 @@ func (m *GormIdentityRepository) Query(funcs ...func(*gorm.DB) *gorm.DB) ([]*Ide
 	return objs, nil
 }
 
-// List return all user identities
-func (m *GormIdentityRepository) List(ctx context.Context) ([]*app.Identity, error) {
-	defer goa.MeasureSince([]string{"goa", "db", "identity", "list"}, time.Now())
-	var objs []*app.Identity
+// ConvertIdentityFromModel convert identity from model to app representation
+func ConvertIdentityFromModel(t *Identity) *app.Identity {
+	id := t.ID.String()
+	converted := app.Identity{
+		Data: &app.IdentityData{
+			ID:       &id,
+			FullName: &t.FullName,
+			ImageURL: &t.ImageURL,
+		},
+	}
+	return &converted
+}
 
-	err := m.db.Table(m.TableName()).Find(&objs).Error
+// List return all user identities
+func (m *GormIdentityRepository) List(ctx context.Context) (*app.IdentityArray, error) {
+	defer goa.MeasureSince([]string{"goa", "db", "identity", "list"}, time.Now())
+	var rows []Identity
+
+	err := m.db.Table(m.TableName()).Find(&rows).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
-	return objs, nil
+	res := app.IdentityArray{}
+	res.Data = make([]*app.IdentityData, len(rows))
+	for index, value := range rows {
+		ident := ConvertIdentityFromModel(&value)
+		res.Data[index] = ident.Data
+	}
+	return &res, nil
 }

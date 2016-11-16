@@ -47,5 +47,5 @@ type SearchRepository interface {
 
 // IdentityRepository encapsulates identity
 type IdentityRepository interface {
-	List(ctx context.Context) ([]*app.Identity, error)
+	List(ctx context.Context) (*app.IdentityArray, error)
 }

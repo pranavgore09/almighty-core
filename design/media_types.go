@@ -201,16 +201,33 @@ var User = a.MediaType("application/vnd.user+json", func() {
 
 // Identity represents an identified user object
 var Identity = a.MediaType("application/vnd.identity+json", func() {
+	a.ContentType("application/vnd.api+json")
 	a.TypeName("Identity")
 	a.Description("ALM User Identity")
-	a.Attribute("id", d.String, "unique id for the user identity")
-	a.Attribute("fullName", d.String, "The users full name")
-	a.Attribute("imageURL", d.String, "The avatar image for the user")
+	a.Attributes(func() {
+		a.Attribute("data", IdentityData)
+		a.Required("data")
 
+	})
 	a.View("default", func() {
-		a.Attribute("id")
-		a.Attribute("fullName")
-		a.Attribute("imageURL")
+		a.Attribute("data")
+		a.Required("data")
+	})
+})
+
+// IdentityArray represents an array of identified user objects
+var IdentityArray = a.MediaType("application/vnd.identity-array+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("IdentityArray")
+	a.Description("ALM User Identity Array")
+	a.Attributes(func() {
+		a.Attribute("data", a.ArrayOf(IdentityData))
+		a.Required("data")
+
+	})
+	a.View("default", func() {
+		a.Attribute("data")
+		a.Required("data")
 	})
 })
 
