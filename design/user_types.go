@@ -130,9 +130,15 @@ var UpdateTrackerQueryAlternatePayload = a.Type("UpdateTrackerQueryAlternatePayl
 	a.Required("query", "schedule", "trackerID")
 })
 
+// IdentityDataAttributes represents an identified user object attributes
+var IdentityDataAttributes = a.Type("IdentityDataAttributes", func() {
+	a.Attribute("fullName", d.String, "The users full name")
+	a.Attribute("imageURL", d.String, "The avatar image for the user")
+})
+
 // IdentityData represents an identified user object
 var IdentityData = a.Type("IdentityData", func() {
 	a.Attribute("id", d.String, "unique id for the user identity")
-	a.Attribute("fullName", d.String, "The users full name")
-	a.Attribute("imageURL", d.String, "The avatar image for the user")
+	a.Attribute("type", d.String, "type of the user identity")
+	a.Attribute("attributes", IdentityDataAttributes, "Attributes of the user identity")
 })

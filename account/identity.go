@@ -132,9 +132,11 @@ func ConvertIdentityFromModel(t *Identity) *app.Identity {
 	id := t.ID.String()
 	converted := app.Identity{
 		Data: &app.IdentityData{
-			ID:       &id,
-			FullName: &t.FullName,
-			ImageURL: &t.ImageURL,
+			ID: &id,
+			Attributes: &app.IdentityDataAttributes{
+				FullName: &t.FullName,
+				ImageURL: &t.ImageURL,
+			},
 		},
 	}
 	return &converted
