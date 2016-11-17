@@ -328,6 +328,36 @@ func getWorkItemTestData(t *testing.T) []testSecureAPI {
 			payload:            nil,
 			jwtToken:           "",
 		},
+		// adding security tests for workitem.2 endpoint
+		{
+			method:             "PATCH",
+			url:                "/api/workitems.2/12345",
+			expectedStatusCode: 401,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWIPayloadString, // doesnt matter actually because we expect it to fail
+			jwtToken:           getExpiredAuthHeader(t, privatekey),
+		}, {
+			method:             "PATCH",
+			url:                "/api/workitems.2/12345",
+			expectedStatusCode: 401,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWIPayloadString, // doesnt matter actually because we expect it to fail
+			jwtToken:           getMalformedAuthHeader(t, privatekey),
+		}, {
+			method:             "PATCH",
+			url:                "/api/workitems.2/12345",
+			expectedStatusCode: 401,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWIPayloadString, // doesnt matter actually because we expect it to fail
+			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+		}, {
+			method:             "PATCH",
+			url:                "/api/workitems.2/12345",
+			expectedStatusCode: 401,
+			expectedErrorCode:  "jwt_security_error", // doesnt matter actually because we expect it to fail
+			payload:            createWIPayloadString,
+			jwtToken:           "",
+		},
 	}
 }
 
@@ -377,6 +407,9 @@ func TestUnauthorizeWorkItemCUD(t *testing.T) {
 		app.UseJWTMiddleware(service, jwtMiddleware)
 		controller := NewWorkitemController(service, gormapplication.NewGormDB(DB))
 		app.MountWorkitemController(service, controller)
+
+		controller2 := NewWorkitem2Controller(service, gormapplication.NewGormDB(DB))
+		app.MountWorkitem2Controller(service, controller2)
 
 		// Hit the service with own request
 		service.Mux.ServeHTTP(rr, req)
