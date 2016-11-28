@@ -143,3 +143,23 @@ var identityData = a.Type("IdentityData", func() {
 	a.Attribute("attributes", identityDataAttributes, "Attributes of the user identity")
 	a.Required("type", "attributes")
 })
+
+// Top level entity for assignee relationship API
+var workItemRelationAssignee = a.Type("WorkItemRelationAssignee", func() {
+	a.Attribute("data", assigneeData)
+	a.Attribute("version", d.String, "Version of WI to update", func() {
+		a.Example("0")
+	}) // Version is not an integer because it is `Required` field, and when not passed, value will be 0
+	a.Required("version")
+	// "data" is not Required, when NIL we remove the relationship form given WI
+})
+
+var assigneeData = a.Type("AssigneeData", func() {
+	a.Attribute("type", d.String, func() {
+		a.Enum("identities")
+	})
+	a.Attribute("id", d.String, "UUID of the identity", func() {
+		a.Example("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
+	})
+	a.Required("type", "id")
+})

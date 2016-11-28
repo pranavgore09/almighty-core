@@ -61,6 +61,10 @@ func (g *GormBase) WorkItems() application.WorkItemRepository {
 	return models.NewWorkItemRepository(g.db)
 }
 
+func (g *GormBase) WorkItems2() application.WorkItem2Repository {
+	return models.NewWorkItem2Repository(g.db)
+}
+
 func (g *GormBase) WorkItemTypes() application.WorkItemTypeRepository {
 	return models.NewWorkItemTypeRepository(g.db)
 }

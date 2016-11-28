@@ -15,6 +15,12 @@ type WorkItemRepository interface {
 	List(ctx context.Context, criteria criteria.Expression, start *int, length *int) ([]*app.WorkItem, uint64, error)
 }
 
+// WorkItem2Repository currently being used only to update WorkItem.
+// ToDo: add other methods as and when needed.
+type WorkItem2Repository interface {
+	UpdateAssignee(ctx context.Context, ID string, assignee *app.WorkItemRelationAssignee) (*app.WorkItem, error)
+}
+
 // WorkItemTypeRepository encapsulates storage & retrieval of work item types
 type WorkItemTypeRepository interface {
 	Load(ctx context.Context, name string) (*app.WorkItemType, error)

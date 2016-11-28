@@ -201,6 +201,9 @@ func main() {
 	identityCtrl := NewIdentityController(service, appDB)
 	app.MountIdentityController(service, identityCtrl)
 
+	workItemRelationshipController := NewWorkitemassigneeController(service, appDB)
+	app.MountWorkitemassigneeController(service, workItemRelationshipController)
+
 	fmt.Println("Git Commit SHA: ", Commit)
 	fmt.Println("UTC Build Time: ", BuildTime)
 	fmt.Println("UTC Start Time: ", StartTime)

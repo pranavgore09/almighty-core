@@ -468,3 +468,27 @@ var _ = a.Resource("search", func() {
 		a.Response(d.InternalServerError)
 	})
 })
+
+// relationship of Assignee (set/remove)
+// refer :- http://jsonapi.org/format/#crud-updating-relationships
+var _ = a.Resource("workitemassignee", func() {
+	a.BasePath("/workitems.2")
+	a.Action("update", func() {
+		a.Security("jwt")
+		a.Routing(
+			a.PATCH("/:id/relationships/assignee"),
+		)
+		a.Description("Set/Remove work item's assignee.")
+		a.Params(func() {
+			a.Param("id", d.String, "ID of work item to which assignee to be set/remove")
+		})
+		a.Payload(workItemRelationAssignee)
+		a.Response(d.OK) // refer http://jsonapi.org/format/#crud-updating-relationship-responses-200
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia)
+		})
+		a.Response(d.InternalServerError)
+		a.Response(d.NotFound)
+		a.Response(d.Unauthorized)
+	})
+})
