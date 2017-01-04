@@ -6,6 +6,7 @@ import (
 
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/application"
+	"github.com/almighty/almighty-core/errors"
 	"github.com/almighty/almighty-core/jsonapi"
 	query "github.com/almighty/almighty-core/query/simple"
 	"github.com/almighty/almighty-core/remoteworkitem"
@@ -146,13 +147,24 @@ func (c *TrackerController) List(ctx *app.ListTrackerContext) error {
 func (c *TrackerController) Update(ctx *app.UpdateTrackerContext) error {
 	result := application.Transactional(c.db, func(appl application.Application) error {
 
-		toSave := app.Tracker{
-			ID:   ctx.ID,
-			URL:  ctx.Payload.URL,
-			Type: ctx.Payload.Type,
+		if ctx.Payload == nil || ctx.Payload.Data == nil || ctx.Payload.Data.ID == "" {
+			jerrors, _ := jsonapi.ErrorToJSONAPIErrors(errors.NewBadParameterError("data.id", nil))
+			return ctx.NotFound(jerrors)
 		}
-		t, err := appl.Trackers().Save(ctx.Context, toSave)
 
+		tr, err := appl.Trackers().Load(ctx, ctx.Payload.Data.ID)
+		if err != nil {
+			jerrors, _ := jsonapi.ErrorToJSONAPIErrors(goa.ErrNotFound(fmt.Sprintf("Error updating tracker item: %s", err.Error())))
+			return ctx.NotFound(jerrors)
+		}
+
+		if ctx.Payload.Data.Attributes != nil && ctx.Payload.Data.Attributes.Type != nil && *ctx.Payload.Data.Attributes.Type != "" {
+			tr.Type = *ctx.Payload.Data.Attributes.Type
+		}
+		if ctx.Payload.Data.Attributes != nil && ctx.Payload.Data.Attributes.URL != nil && *ctx.Payload.Data.Attributes.URL != "" {
+			tr.URL = *ctx.Payload.Data.Attributes.URL
+		}
+		t, err := appl.Trackers().Save(ctx.Context, *tr)
 		if err != nil {
 			switch err := err.(type) {
 			case remoteworkitem.BadParameterError, remoteworkitem.ConversionError:
@@ -163,7 +175,13 @@ func (c *TrackerController) Update(ctx *app.UpdateTrackerContext) error {
 				return ctx.InternalServerError(jerrors)
 			}
 		}
-		return ctx.OK(t)
+		jsonapiTrackerObject := app.TrackerObjectSingle{
+			Data: convertTracker(t),
+			Links: &app.TrackerLinks{
+				Self: buildAbsoluteURL(ctx.RequestData),
+			},
+		}
+		return ctx.OK(&jsonapiTrackerObject)
 	})
 	c.scheduler.ScheduleAllQueries()
 	return result
