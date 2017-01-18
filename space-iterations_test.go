@@ -75,6 +75,7 @@ func (rest *TestSpaceIterationREST) TestSuccessCreateIteration() {
 	assert.NotNil(t, c.Data.ID)
 	assert.NotNil(t, c.Data.Relationships.Space)
 	assert.Equal(t, p.ID.String(), *c.Data.Relationships.Space.Data.ID)
+	assert.Equal(t, iteration.IterationStateNew, *c.Data.Attributes.State)
 }
 
 func (rest *TestSpaceIterationREST) TestSuccessCreateIterationWithOptionalValues() {
