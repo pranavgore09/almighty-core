@@ -147,7 +147,7 @@ func (r *GormRepository) createOrUpdateWITs(ctx context.Context, s *ImportHelper
 			// Remove fields directly defined in WIT
 			for fieldName, fd := range wit.Fields {
 				// verify FieldType with original value
-				if originalType, ok := toBeFoundFields[fieldName]; ok == true {
+				if originalType, ok := toBeFoundFields[fieldName]; ok {
 					if fd.Type.Equal(originalType) == false {
 						return errs.Errorf("Type of the field %s changed from %s to %s", fieldName, originalType, fd.Type)
 					}
